@@ -1,0 +1,12 @@
+[Unit]
+Description=cabjovi
+After=sound.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/cabjovi %h/cabjovi/ --alsa-card=Device --alsa-mixer=PCM
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
