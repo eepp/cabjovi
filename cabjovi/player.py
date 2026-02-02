@@ -28,7 +28,7 @@ _logger = logging.getLogger(__name__)
 
 # Manages mpg123 subprocess for MP3 playback.
 class Player:
-    def __init__(self, alsa_device: str = 'hw:1,0') -> None:
+    def __init__(self, alsa_device: str) -> None:
         self._alsa_device = alsa_device
         self._process: subprocess.Popen[bytes] | None = None
         self._cur_file_path: pathlib.Path | None = None
