@@ -21,9 +21,10 @@
 
 import dataclasses
 import datetime
+import pathlib
 import re
 
-_DAY_TO_NUM = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6}
+_DAY_TO_NUM: dict[str, int] = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6}
 _DIR_NAME_PATTERN = re.compile(r'^(mon|tue|wed|thu|fri|sat|sun)-(\d{1,2}):(mon|tue|wed|thu|fri|sat|sun)-(\d{1,2})$')
 
 
@@ -38,7 +39,7 @@ class _TimeRange:
 # Parses directory name into a `_TimeRange` instance.
 #
 # Returns `None` if the name doesn't match the expected pattern.
-def _parse_dir_name(name):
+def _parse_dir_name(name: str) -> _TimeRange | None:
     match = _DIR_NAME_PATTERN.match(name.lower())
 
     if not match:
@@ -58,7 +59,7 @@ def _parse_dir_name(name):
 # Checks if current time `now_day`/`now_hour` falls within the given
 # range `time_range`. Handles ranges that wrap around the week (for
 # example, Friday to Monday).
-def _time_in_range(now_day, now_hour, time_range):
+def _time_in_range(now_day: int, now_hour: int, time_range: _TimeRange) -> bool:
     # Convert to hours since start of week
     now_week_hour = now_day * 24 + now_hour
     start_week_hour = time_range.start_day * 24 + time_range.start_hour
@@ -75,7 +76,7 @@ def _time_in_range(now_day, now_hour, time_range):
 # Finds the first directory in `base_dir` matching the current time.
 #
 # Returns `None` if no directory matches.
-def get_cur_dir(base_dir):
+def get_cur_dir(base_dir: pathlib.Path) -> pathlib.Path | None:
     now = datetime.datetime.now()
 
     if not base_dir.is_dir():

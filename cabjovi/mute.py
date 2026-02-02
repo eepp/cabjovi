@@ -31,9 +31,9 @@ _logger = logging.getLogger(__name__)
 
 # ALSA mixer control for muting/unmuting.
 class AlsaMixer:
-    def __init__(self, card_name, mixer_name):
-        self._mixer = None
-        self._card_index = None
+    def __init__(self, card_name: str, mixer_name: str) -> None:
+        self._mixer: alsaaudio.Mixer | None = None
+        self._card_index: int | None = None
 
         try:
             cards = alsaaudio.cards()
@@ -51,11 +51,11 @@ class AlsaMixer:
             _logger.warning(f'Failed to initialize ALSA mixer: {exc}')
 
     @property
-    def card_index(self):
+    def card_index(self) -> int | None:
         return self._card_index
 
     # Mutes the mixer, returning `True` on success.
-    def mute(self):
+    def mute(self) -> bool:
         if self._mixer is None:
             return False
 
@@ -68,7 +68,7 @@ class AlsaMixer:
             return False
 
     # Unmutes the mixer, returning `True` on success.
-    def unmute(self):
+    def unmute(self) -> bool:
         if self._mixer is None:
             return False
 
@@ -83,8 +83,9 @@ class AlsaMixer:
 
 # GPIO-based mute control with debounce and auto-mute timeout.
 class MuteCtrl:
-    def __init__(self, mixer, gpio_chip_dev, gpio_pin, switch_debounce,
-                 door_debounce, auto_mute_delay):
+    def __init__(self, mixer: AlsaMixer, gpio_chip_dev: str, gpio_pin: int,
+                 switch_debounce: float, door_debounce: float,
+                 auto_mute_delay: float) -> None:
         self._mixer = mixer
         self._gpio_chip_dev = gpio_chip_dev
         self._gpio_pin = gpio_pin
@@ -92,22 +93,22 @@ class MuteCtrl:
         self._door_debounce = door_debounce
         self._auto_mute_delay = auto_mute_delay
         self._is_muted = True
-        self._last_mute_time = 0
-        self._last_unmute_time = 0
-        self._last_event_time = 0
-        self._gpio_request = None
+        self._last_mute_time: float = 0
+        self._last_unmute_time: float = 0
+        self._last_event_time: float = 0
+        self._gpio_request: gpiod.LineRequest | None = None
         self._is_running = False
-        self._gpio_thread = None
-        self._auto_mute_thread = None
+        self._gpio_thread: threading.Thread | None = None
+        self._auto_mute_thread: threading.Thread | None = None
         self._lock = threading.Lock()
 
     @property
-    def is_muted(self):
+    def is_muted(self) -> bool:
         with self._lock:
             return self._is_muted
 
     # Performs muting operation.
-    def _do_mute(self):
+    def _do_mute(self) -> None:
         with self._lock:
             if self._is_muted:
                 return
@@ -118,7 +119,7 @@ class MuteCtrl:
             self._mixer.mute()
 
     # Performs unmuting operation.
-    def _do_unmute(self):
+    def _do_unmute(self) -> None:
         with self._lock:
             if not self._is_muted:
                 return
@@ -136,7 +137,9 @@ class MuteCtrl:
             self._mixer.unmute()
 
     # Background thread that polls for GPIO events.
-    def _gpio_loop(self):
+    def _gpio_loop(self) -> None:
+        assert self._gpio_request is not None
+
         while self._is_running:
             if not self._gpio_request.wait_edge_events(timeout=0.5):
                 continue
@@ -161,7 +164,7 @@ class MuteCtrl:
                 self._do_unmute()
 
     # Background thread that handles auto-mute timeout.
-    def _auto_mute_loop(self):
+    def _auto_mute_loop(self) -> None:
         _logger.info('Auto-mute thread started')
 
         while self._is_running:
@@ -178,7 +181,7 @@ class MuteCtrl:
                     self._mixer.mute()
 
     # Starts the mute controller.
-    def start(self):
+    def start(self) -> None:
         if self._is_running:
             return
 
@@ -219,7 +222,7 @@ class MuteCtrl:
         self._auto_mute_thread.start()
 
     # Stops the mute controller.
-    def stop(self):
+    def stop(self) -> None:
         self._is_running = False
 
         if self._gpio_thread is not None:

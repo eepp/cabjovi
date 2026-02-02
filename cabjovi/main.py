@@ -20,10 +20,11 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import logging
+import pathlib
 import signal
 import sys
 import time
-from pathlib import Path
+import types
 
 import typer
 
@@ -32,19 +33,19 @@ import cabjovi.playback
 import cabjovi.player
 
 # Graceful shutdown state
-_shutdown_requested = False
-_player = None
+_shutdown_requested: bool = False
+_player: cabjovi.player.Player | None = None
 
 
 # Configures logging for the service.
-def _setup_logging():
+def _setup_logging() -> None:
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
                         handlers=[logging.StreamHandler(sys.stdout)])
 
 
 # Handles shutdown signals.
-def _sig_handler(signum, frame):
+def _sig_handler(signum: int, _frame: types.FrameType | None) -> None:
     global _shutdown_requested
 
     _shutdown_requested = True
@@ -59,10 +60,10 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    base_dir: Path = typer.Argument(...,
-                                    help='Base directory containing time-scheduled music directories',
-                                    exists=True, file_okay=False,
-                                    dir_okay=True, resolve_path=True),
+    base_dir: pathlib.Path = typer.Argument(...,
+                                            help='Base directory containing time-scheduled music directories',
+                                            exists=True, file_okay=False,
+                                            dir_okay=True, resolve_path=True),
     alsa_card_name: str = typer.Option('default', '--alsa-card', '-c',
                                        help='ALSA card name'),
     alsa_mixer_name: str = typer.Option('default', '--alsa-mixer', '-m',
@@ -79,7 +80,7 @@ def main(
                                           help='Auto-mute delay (s)'),
     poll_interval: float = typer.Option(10.0, '--poll-interval', '-p',
                                         help='Polling interval (s) when no directory matches'),
-):
+) -> None:
     # Set up logging
     _setup_logging()
     logger = logging.getLogger('cabjovi')

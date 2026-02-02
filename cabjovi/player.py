@@ -20,6 +20,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import logging
+import pathlib
 import subprocess
 
 _logger = logging.getLogger(__name__)
@@ -27,15 +28,15 @@ _logger = logging.getLogger(__name__)
 
 # Manages mpg123 subprocess for MP3 playback.
 class Player:
-    def __init__(self, alsa_device='hw:1,0'):
+    def __init__(self, alsa_device: str = 'hw:1,0') -> None:
         self._alsa_device = alsa_device
-        self._process = None
-        self._cur_file_path = None
+        self._process: subprocess.Popen[bytes] | None = None
+        self._cur_file_path: pathlib.Path | None = None
 
     # Starts playing an MP3 file `file_path`.
     #
     # Returns `True` if playback started successfully.
-    def play(self, file_path):
+    def play(self, file_path: pathlib.Path) -> bool:
         self.stop()
 
         try:
@@ -58,24 +59,24 @@ class Player:
             return False
 
     # Terminates the mpg123 process without waiting.
-    def terminate(self):
+    def terminate(self) -> None:
         if self._process is not None:
             try:
-                _logger.info(f'Terminating mpg123 process...')
+                _logger.info('Terminating mpg123 process...')
                 self._process.terminate()
             except Exception:
                 pass
 
     # Stops current playback.
-    def stop(self):
+    def stop(self) -> None:
         if self._process is not None:
-            _logger.info(f'Terminating mpg123 process...')
+            _logger.info('Terminating mpg123 process...')
 
             try:
                 self._process.terminate()
                 self._process.wait(timeout=2)
             except subprocess.TimeoutExpired:
-                _logger.warning(f'Failed to terminate mpg123 ({exc}); killing it...')
+                _logger.warning('Failed to terminate mpg123; killing it...')
                 self._process.kill()
                 self._process.wait()
             except Exception as exc:
@@ -85,6 +86,6 @@ class Player:
                 self._cur_file_path = None
 
     # Waits for the current track to finish.
-    def wait(self):
+    def wait(self) -> None:
         if self._process is not None:
             self._process.wait()

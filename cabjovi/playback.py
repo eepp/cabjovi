@@ -21,6 +21,7 @@
 
 import logging
 import random
+from pathlib import Path
 
 import cabjovi.sched
 
@@ -29,18 +30,18 @@ _logger = logging.getLogger(__name__)
 
 # Controls random playback within time-scheduled directories.
 class PlaybackCtrl:
-    def __init__(self, base_dir):
+    def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir
-        self._cur_dir = None
-        self._last_played_file_name = None
+        self._cur_dir: Path | None = None
+        self._last_played_file_name: str | None = None
 
     # Lists all the MP3 files in `dir`, sorted alphabetically.
     @staticmethod
-    def _list_mp3_files(dir):
+    def _list_mp3_files(dir: Path) -> list[Path]:
         if not dir.is_dir():
             return []
 
-        mp3_files = []
+        mp3_files: list[Path] = []
 
         for entry in dir.iterdir():
             if entry.is_file() and entry.suffix.lower() == '.mp3':
@@ -52,7 +53,7 @@ class PlaybackCtrl:
     #
     # Returns the next MP3 file to play, or `None` if nothing to
     # play (forced silence).
-    def select_next(self):
+    def select_next(self) -> Path | None:
         cur_dir = cabjovi.sched.get_cur_dir(self._base_dir)
 
         if cur_dir is None:
