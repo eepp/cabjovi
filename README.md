@@ -100,7 +100,8 @@ cabjovi is running: it selects the next MP3 file to play from the
 current state of the file system after the current MP3 ends.
 
 cabjovi doesn't play anything if no directory matches the current day
-and time.
+and time. In that case, it checks every 10&nbsp;seconds (configurable
+with `--poll-interval`) if there's a new matching directory.
 
 Behaviour is undefined when time ranges overlap.
 
@@ -139,5 +140,6 @@ debounce times and specify GPIO/ALSA parameters.
 Connect a microswitch to short the selected GPIO pin and ground
 to mute the playback.
 
-The mute state automatically resets after 5 minutes (configurable)
-of inactivity, in case the door remains open.
+The mute state automatically resets after 5&nbsp;minutes (configurable
+with `--auto-mute-delay`) of inactivity,
+in case the door remains open.
