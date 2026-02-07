@@ -1,6 +1,6 @@
 [project]
 name = "cabjovi"
-version = "0.1.0"
+version = "0.2.0"
 description = "Raspberry Pi music player service with time-scheduled playback and GPIO mute control"
 readme = "README.md"
 requires-python = ">=3.11"
