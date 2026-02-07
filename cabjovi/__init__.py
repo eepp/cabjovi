@@ -19,4 +19,6 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-__version__: str = "0.2.0"
+import importlib.metadata
+
+__version__: str = importlib.metadata.version("cabjovi")

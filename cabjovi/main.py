@@ -28,6 +28,7 @@ import types
 
 import typer
 
+import cabjovi
 import cabjovi.mute
 import cabjovi.playback
 import cabjovi.player
@@ -55,6 +56,12 @@ def _sig_handler(signum: int, _frame: types.FrameType | None) -> None:
         _player.terminate()
 
 
+def _version_callback(value: bool) -> None:
+    if value:
+        print(f'cabjovi {cabjovi.__version__}')
+        raise typer.Exit()
+
+
 app = typer.Typer()
 
 
@@ -80,6 +87,9 @@ def main(
                                           help='Auto-mute delay (s)'),
     poll_interval: float = typer.Option(10.0, '--poll-interval', '-p',
                                         help='Polling interval (s) when no directory matches'),
+    version: bool = typer.Option(False, '--version', '-V',
+                                 callback=_version_callback, is_eager=True,
+                                 help='Show version and exit'),
 ) -> None:
     # Set up logging
     _setup_logging()
