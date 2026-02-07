@@ -35,6 +35,17 @@ class _TimeRange:
     end_day: int
     end_hour: int
 
+    # Duration (hours).
+    @property
+    def duration(self) -> int:
+        start_week_hour = self.start_day * 24 + self.start_hour
+        end_week_hour = self.end_day * 24 + self.end_hour
+
+        if start_week_hour <= end_week_hour:
+            return end_week_hour - start_week_hour
+        else:
+            return 7 * 24 - start_week_hour + end_week_hour
+
 
 # Parses directory name into a `_TimeRange` instance.
 #
@@ -73,14 +84,20 @@ def _time_in_range(now_day: int, now_hour: int, time_range: _TimeRange) -> bool:
         return now_week_hour >= start_week_hour or now_week_hour < end_week_hour
 
 
-# Finds the first directory in `base_dir` matching the current time.
+# Finds the most specific directory in `base_dir` matching the current
+# time. When multiple time range directories match, picks the narrowest
+# one.
 #
-# Returns `None` if no directory matches.
+# Falls back to a `default` subdirectory if no range matches.
+#
+# Returns `None` if nothing matches and no `default` directory exists.
 def get_cur_dir(base_dir: pathlib.Path) -> pathlib.Path | None:
     now = datetime.datetime.now()
 
     if not base_dir.is_dir():
         return
+
+    matches: list[tuple[pathlib.Path, _TimeRange]] = []
 
     for entry in base_dir.iterdir():
         if not entry.is_dir():
@@ -92,4 +109,12 @@ def get_cur_dir(base_dir: pathlib.Path) -> pathlib.Path | None:
             continue
 
         if _time_in_range(now.weekday(), now.hour, time_range):
-            return entry
+            matches.append((entry, time_range))
+
+    if matches:
+        return min(matches, key=lambda m: m[1].duration)[0]
+
+    default_dir = base_dir / "default"
+
+    if default_dir.is_dir():
+        return default_dir

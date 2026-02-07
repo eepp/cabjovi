@@ -99,11 +99,14 @@ You can add/modify/remove time range directories and MP3 files while
 cabjovi is running: it selects the next MP3 file to play from the
 current state of the file system after the current MP3 ends.
 
-cabjovi doesn't play anything if no directory matches the current day
-and time. In that case, it checks every 10&nbsp;seconds (configurable
-with `--poll-interval`) if there's a new matching directory.
+If no time range directory matches the current day and time, cabjovi
+uses the `default` subdirectory as a fallback. If there's no `default`
+subdirectory either, cabjovi doesn't play anything, checking
+every 10&nbsp;seconds (configurable with `--poll-interval`) for a new
+matching directory.
 
-Behaviour is undefined when time ranges overlap.
+When time ranges overlap, cabjovi selects the narrowest (most specific)
+matching range. For example, `mon-15:mon-17` wins over `mon-7:tue-16`.
 
 ### Run directly
 
