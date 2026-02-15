@@ -114,9 +114,13 @@ class MuteCtrl:
                 return
 
             _logger.info('Muting...')
+
+            if not self._mixer.mute():
+                _logger.error('Mute failed; not updating internal state')
+                return
+
             self._is_muted = True
             self._last_mute_time = time.time()
-            self._mixer.mute()
 
     # Performs unmuting operation.
     def _do_unmute(self) -> None:
@@ -132,9 +136,13 @@ class MuteCtrl:
                 return
 
             _logger.info('Unmuting...')
+
+            if not self._mixer.unmute():
+                _logger.error('Unmute failed; not updating internal state')
+                return
+
             self._is_muted = False
             self._last_unmute_time = time.time()
-            self._mixer.unmute()
 
     # Background thread that polls for GPIO events.
     def _gpio_loop(self) -> None:
@@ -176,9 +184,12 @@ class MuteCtrl:
 
                 if (time.time() - self._last_unmute_time) >= self._auto_mute_delay:
                     _logger.info(f'Auto-mute triggered after {self._auto_mute_delay} seconds')
-                    self._is_muted = True
-                    self._last_mute_time = time.time()
-                    self._mixer.mute()
+
+                    if self._mixer.mute():
+                        self._is_muted = True
+                        self._last_mute_time = time.time()
+                    else:
+                        _logger.error('Auto-mute failed; will retry')
 
     # Starts the mute controller.
     def start(self) -> None:
@@ -201,9 +212,11 @@ class MuteCtrl:
             _logger.info(f'GPIO mute control initialized on pin #{self._gpio_pin}')
 
             # Always start muted
-            self._is_muted = True
-            self._last_mute_time = time.time()
-            self._mixer.mute()
+            if self._mixer.mute():
+                self._is_muted = True
+                self._last_mute_time = time.time()
+            else:
+                _logger.error('Initial mute failed')
 
             # Start GPIO polling thread
             _logger.info('Starting GPIO polling thread...')
@@ -212,9 +225,9 @@ class MuteCtrl:
         except Exception as exc:
             _logger.warning(f'Failed to initialize GPIO: {exc}')
             # Default to muted if GPIO fails
-            self._is_muted = True
-            self._last_mute_time = time.time()
-            self._mixer.mute()
+            if self._mixer.mute():
+                self._is_muted = True
+                self._last_mute_time = time.time()
 
         # Start auto-mute thread
         _logger.info('Starting auto-mute thread...')
