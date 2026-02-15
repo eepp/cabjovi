@@ -92,6 +92,7 @@ class MuteCtrl:
         self._switch_debounce = switch_debounce
         self._door_debounce = door_debounce
         self._auto_mute_delay = auto_mute_delay
+        self._last_gpio_value: gpiod.line.Value | None = None
         self._is_muted = True
         self._last_mute_time: float = 0
         self._last_unmute_time: float = 0
@@ -164,7 +165,13 @@ class MuteCtrl:
 
             # Read actual stable value
             val = self._gpio_request.get_value(self._gpio_pin)
-            _logger.info(f'GPIO stable value: {val}')
+
+            if val == self._last_gpio_value:
+                # Value didn't change; ignore spurious edge event
+                continue
+
+            self._last_gpio_value = val
+            _logger.info(f'GPIO value changed to {val}')
 
             if val == gpiod.line.Value.INACTIVE:
                 self._do_mute()
